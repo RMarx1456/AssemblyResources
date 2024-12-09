@@ -6,12 +6,11 @@ const PORT = 10001;
 
 //Executable stuff
 const { spawn } = require('child_process');
-const Assembler = 'nasm'
-const AssemblerArgs = ['-f elf64 executables/init.asm', __dirname]
-const Linker = 'ld'
-const LinkerArgs = ['executables/init.o -o init', __dirname]
-const initPath = 'init'
-const initArgs = [null, null];
+const Assembler = '/usr/bin/nasm'
+const AssemblerArgs = ['-f', 'elf64', 'executables/init.asm']
+const Linker = '/usr/bin/ld'
+const LinkerArgs = ['executables/init.o', '-o', 'init']
+const initPath = 'executables/init'
 
 let init;
 
@@ -54,19 +53,46 @@ async function connect() {
     }
 }
 
-function CreateExecutable() {
-    spawn(Assembler, AssemblerArgs);
-    spawn(Linker, LinkerArgs);
+async function CreateExecutable() {
+    console.log(__dirname);
+    let assembler = spawn(Assembler, AssemblerArgs, { stdio: 'inherit', cwd: __dirname});
+    assembler.on('spawn', () => {
+        console.log('Assembler Spawned!');
+    });
+    assembler.on('error', (err) => {
+        console.error(err);
+    });
+    assembler.stdout?.on('data', (data) => {
+        console.log(`${data.toString()}`);
+    });
+    assembler.on('close', () => {
+        console.log('Assembler Closed!');
+    });
+
+    let linker = spawn(Linker, LinkerArgs, { stdio: 'inherit', cwd: __dirname});
+    linker.on('spawn', () => {
+        console.log('Linker Spawned!');
+    });
+    linker.on('error', (err) => {
+        console.error(err);
+    });
+    linker.stdout?.on('data', (data) => {
+        console.log(`${data.toString()}`);
+    });
+    linker.on('close', () => {
+        console.log('Linker Closed!');
+    });
 }
 
 function setupChild(childProcess) {
-    Console.log('Debug flag.');
+    console.log('Debug flag!');
     childProcess.stdout.on('data', (data) => {
-        regBuffer.push(data);
-        console.log(data.toString());
+        console.log('Testing output');
+        console.log(data.toString() +" Setup");
+        regBuffer.push(data.toString());
     });
     childProcess.on('close', (code) => {
-        console.log(code)
+        console.log(code + " Close")
     });
 }
 
@@ -77,9 +103,11 @@ async function createProcessQuery(connection, name, path, args) {
     try {
         let result = await connection.query(
             `INSERT INTO process (name, EXECUTION_PATH, ARGS)
-            VALUES (${name}, ${path}, ${args})`
+            VALUES (?, ?, ?)`, [name, path, args]
         );
-        processRowID = result[0].ID;
+        console.log(result.insertId);
+        processRowID = parseInt(result.insertId);
+        console.log(processRowID +" ROW ID");
     }
     catch (err) {
         console.error(err);
@@ -105,7 +133,7 @@ async function syscallQuery(connection, ID, RAX, RDI, RSI, RDX, R10, R8, R9, RET
 async function addSyscall(connection, ID, regsBuffer) {
     while(true) {
         regs = regsBuffer.shift();
-        if(regs.readInt32LE(BufferOffsets.identifier.toString === 'regs')) {
+        if(regsBuffer.length > 0 && regs.readInt32LE(BufferOffsets.identifier.toString() === 'regs')) {
             let RAX = regs.readBigUInt64LE(BufferOffsets.RAX);
             let RDI = regs.readBigUInt64LE(BufferOffsets.RDI);
             let RSI = regs.readBigUInt64LE(BufferOffsets.RSI);
@@ -137,6 +165,7 @@ app.set('view engine', 'ejs');
 
 // Home page
 app.get('/', (req, res) => {
+    CreateExecutable();
     res.render('home', { errors: []});
 });
 app.post('/submit', async (req, res) => {
@@ -147,10 +176,12 @@ app.post('/submit', async (req, res) => {
 
     async function createProcess(conn, processName, processPath, processArgs) {
         await createProcessQuery(conn, processName, processPath, processArgs);
-        init = spawn(initPath, initArgs);
-        init.stdin.write(processPath);
-        init.stdin.write(processArgs);
-        init.stdin.write(null);
+        init = spawn(initPath, null, { stdio: 'inherit', cwd: path.join(__dirname, '/executables')});
+        setupChild(init);
+        init.stdin.write(processPath + '\n');
+        init.stdin.write(processArgs + '\n');
+        init.stdin.write('\n');
+        init.stdin.end();
     }
 
     if(data.name != null && data.path != null && execution == false) {
@@ -162,14 +193,16 @@ app.post('/submit', async (req, res) => {
         else {
             args = data.args;
         }
-        await createProcess(conn, data.name, data.path, args)
+        createProcess(conn, data.name, data.path, args)
 
-
+        execution = false;
         res.render('home', {data, errors: []});
+    }
+    else {
+
     }
 
 
-    res.render('home', {data, errors: []});
 })
 
 
