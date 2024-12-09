@@ -22,12 +22,22 @@ async function connect() {
         throw err;
     }
 }
-
 async function updateDB(
     name, RAX, 
     RDI, RSI, 
     RDX, R10, 
     R8, R9) {
+    if(isNaN(RAX) == true) {
+        console.log("RAX MUST be an integer").
+        return;
+    }
+    name = name.slice(0, 257);
+    RDI = RDI.slice(0, 257);
+    RSI = RSI.slice(0, 257);
+    RDX = RDX.slice(0, 257);
+    R10 = R10.slice(0, 257);
+    R8 = R8.slice(0, 257);
+    R9 = R9.slice(0, 257);
     const query = `
     INSERT INTO SYSCALL (RAX, SYS_NAME, RDI, RSI, RDX, R10, R8, R9)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -44,7 +54,15 @@ async function updateDB(
 
     conn = await pool.getConnection();
 
-    const result = await conn.query(query, [RAX, name, RDI, RSI, RDX, R10, R8, R9])
+    const result = await conn.query(query, [
+        RAX, 
+        name, 
+        RDI, 
+        RSI, 
+        RDX, 
+        R10, 
+        R8, 
+        R9])
 
     
 }
