@@ -13,6 +13,7 @@
 %DEFINE SYS_PTRACE 101
 %DEFINE PTRACE_TRACEME 0
 %DEFINE PTRACE_SYSCALL 0x7
+%DEFINE PTRACE_GETREGS 0xC
 
 %DEFINE SYS_WAIT4 61
 
@@ -23,7 +24,18 @@ section .rodata
         .msg db 'Quitting assembly program.'
         .len equ $- .msg
 section .data    
-    regs:
+        
+        
+        child_pid db 0
+        child_status db 0
+    
+section .bss
+;Being lazy here; I need to get this project done.
+path resb 4096
+args resb 4096
+env resb 4096
+
+regs:
         ._R15: resq 1
         ._R14: resq 1
         ._R13: resq 1   
@@ -51,16 +63,6 @@ section .data
         ._ES: resq 1
         ._FS: resq 1
         ._GS: resq 1
-        
-        
-        child_pid db 0
-        child_status db 0
-    
-section .bss
-;Being lazy here; I need to get this project done.
-path resb 4096
-args resb 4096
-env resb 4096
 section .text
 global _start
 child:
@@ -129,7 +131,9 @@ _start:
         MOV RDX, 216
         SYSCALL
         
-        CMP regs._RAX 60
+        MOV RAX, regs._RAX
+        
+        CMP RAX, 60
         JE quit
         JMP wait_loop
         

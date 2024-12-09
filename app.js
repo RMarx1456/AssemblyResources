@@ -1,15 +1,34 @@
 const express = require('express');
 const mariadb = require('mariadb');
 const dotenv = require('dotenv').config();
+const path = require('path');
 const PORT = 10001;
 
 //Executable stuff
-const execute = require('child_process');
+const {execute} = require('child_process');
+const Assembler = 'nasm'
+const AssemblerArgs = ['-f elf64 executables/init.asm', __dirname]
+const Linker = 'ld'
+const LinkerArgs = ['executables/init.o -o init', __dirname]
 
-let processTableID;
+let processRowID;
 let execution = false;
 
 let savedData;
+
+let regBuffer = [];
+
+const BufferOffsets = {
+    RAX: 120,
+    RDI: 112,
+    RSI: 104,
+    RDX: 96,
+    R10: 56,
+    R8: 72,
+    R9: 64,
+
+    RET: 80
+}
 
 
 const pool = mariadb.createPool({
@@ -30,9 +49,14 @@ async function connect() {
     }
 }
 
+function CreateExecutable() {
+    execute(Assembler, AssemblerArgs);
+    execute(Linker, LinkerArgs);
+}
+
 function setupChild(childProcess) {
     childProcess.stdout.on('data', (data) => {
-        console.log(data);
+        regBuffer.push(data);
     });
     childProcess.on('close', (code) => {
         console.log(code)
@@ -40,6 +64,47 @@ function setupChild(childProcess) {
 }
 
 async function createProcessQuery(connection, name, path, args) {
+    try {
+        let result = await connection.query(
+            `INSERT INTO process (name, EXECUTION_PATH, ARGS)
+            VALUES (${name}, ${path}, ${args})`
+        );
+        processRowID = result[0].ID;
+    }
+    catch (err) {
+        console.error(err);
+        throw err;
+    }
+}
+async function syscallQuery(connection, ID, RAX, RDI, RSI, RDX, R10, R8, R9, RET) {
+    try {
+        let result = await connection.query(
+            `INSERT INTO SYSCALL (ID, RAX, RDI, RSI, RDX, R10, R8, R9, RET)
+            VALUES (${ID}, 
+            ${RAX.toString()}, ${RDI.toString()}, 
+            ${RSI.toString()}, ${RDX.toString()}, 
+            ${R10.toString()}, ${R8.toString()}, 
+            ${R9.toString()}, ${RET.toString()}, )`
+        );
+    }
+    catch (err) {
+        console.error(err);
+        throw err;
+    }
+}
+async function addSyscall(connection, ID, regsBuffer) {
+    regs = regsBuffer.shift();
+    let RAX = buffer.readBigUInt64LE(BufferOffsets.RAX);
+    let RDI = buffer.readBigUInt64LE(BufferOffsets.RDI);
+    let RSI = buffer.readBigUInt64LE(BufferOffsets.RSI);
+    let RDX = buffer.readBigUInt64LE(BufferOffsets.RDX);
+    let R10 = buffer.readBigUInt64LE(BufferOffsets.R10);
+    let R8 = buffer.readBigUInt64LE(BufferOffsets.R8);
+    let R9 = buffer.readBigUInt64LE(BufferOffsets.R9);
+    let RET = buffer.readBigUInt64LE(BufferOffsets.RET);
+
+
+
 
 }
 
@@ -52,6 +117,7 @@ app.set('view engine', 'ejs');
 
 // Home page
 app.get('/', (req, res) => {
+    CreateExecutable();
     res.render('home', { errors: []});
 });
 app.post('/submit', async (req, res) => {
@@ -61,7 +127,7 @@ app.post('/submit', async (req, res) => {
     const conn = await connect();
 
     async function createProcess(processName, processPath, processArgs) {
-        const childProcess = spawn(processName, [processArgs, null]);
+        const childProcess = execute(processName, [processArgs, null]);
         setupChild(childProcess);
         await createProcessQuery(conn, data.name, data.path, data.args)
     }
@@ -69,7 +135,12 @@ app.post('/submit', async (req, res) => {
     if(data.name != null && data.path != null && execution == false) {
         execution = true; //Locking execution
 
+
+
+        res.render('home', {data, errors: []});
     }
+
+
     res.render('home', {data, errors: []});
 })
 
