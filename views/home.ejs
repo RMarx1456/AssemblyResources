@@ -14,10 +14,6 @@
         <input class="textualInput" type="text" id="args" name="args" placeholder="Place arguments here">
         <button action="submit">Submit</button>
     </form>
-    <h1>STDOUT</h1>
-    <code>
-        <%= 
-    </code>
     <!--Only queries processes created through here AND are in the database.-->
     <h1>Query Process</h1>
     <form action="/submit" method="POST">
@@ -27,9 +23,6 @@
         <br>
         <input class="radioInput" type="radio" id="Errors" name="ErrorQuery" value="Errors">
         <label for="Errors">Query SYSCALL errors</label>
-        <br>
-        <input class="radioInput" type="radio" id="Traps" name="TrapQuery" value="Traps">
-        <label for="Traps">Query hardware traps</label>
         <br>
         <input class="radioInput" type="radio" id="PInfo" name="PInfo" value="PInfo">
         <label for="PInfo">Query process info</label>

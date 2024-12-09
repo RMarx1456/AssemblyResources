@@ -5,20 +5,23 @@
 %DEFINE STDOUT 1
 ;Process
 %DEFINE SYS_CLONE 56
-;Flags
-%DEFINE CLONE_VM 0x0100
-%DEFINE CLONE_SIGHAND 0x0800
-%DEFINE CLONE_THREAD 0x00010000
 
 %DEFINE SYS_FORK 57
+%DEFINE SYS_EXECVE 59
 %DEFINE SYS_EXIT 60
-%DEFINE SYS_PTRACE 101
 
+%DEFINE SYS_PTRACE 101
+%DEFINE PTRACE_TRACEME 0
+%DEFINE PTRACE_SYSCALL 0x7
+
+%DEFINE SYS_WAIT4 61
 
 
 
 section .rodata
-
+    exit_msg:
+        .msg db 'Quitting assembly program.'
+        .len equ $- .msg
 section .data    
     regs:
         ._R15: resq 1
@@ -49,11 +52,94 @@ section .data
         ._FS: resq 1
         ._GS: resq 1
         
-         
+        
+        child_pid db 0
+        child_status db 0
     
-    
+section .bss
+;Being lazy here; I need to get this project done.
+path resb 4096
+args resb 4096
+env resb 4096
 section .text
 global _start
+child:
+    ;Allows the parent process to trace this child process.
+    MOV RAX, SYS_PTRACE
+    MOV RDI, PTRACE_TRACEME
+    XOR RSI, RSI
+    XOR RDX, RDX
+    SYSCALL
+    
+    MOV RAX, SYS_EXECVE
+    MOV RDI, path
+    MOV RSI, args
+    MOV RDX, env
+    SYSCALL
 
 _start:
-
+    ;Read path from app.
+    MOV RAX, SYS_READ
+    MOV RDI, STDIN
+    MOV RSI, path
+    MOV RDX, 4096
+    SYSCALL
+    ;Read args from app.
+    MOV RAX, SYS_READ
+    MOV RDI, STDIN
+    MOV RSI, args
+    MOV RDX, 4096
+    SYSCALL
+    ;Read env from app.
+    MOV RAX, SYS_READ
+    MOV RDI, STDIN
+    MOV RSI, env
+    MOV RDX, 4096
+    SYSCALL
+    ;Create child process.
+    MOV RAX, SYS_FORK
+    SYSCALL
+    
+    CMP RAX, 0
+    JE child
+    MOV [child_pid], RAX
+    ;Wait for stops to gather syscall info.
+    wait_loop:
+        MOV RAX, SYS_WAIT4
+        MOV RDI, [child_pid]
+        MOV RSI, child_status
+        XOR RDX, RDX
+        SYSCALL
+        ;Trace syscalls
+        MOV RAX, SYS_PTRACE
+        MOV RDI, PTRACE_SYSCALL
+        MOV RSI, [child_pid]
+        XOR RDX, RDX
+        SYSCALL
+        ;Pull register info on syscall.
+        MOV RAX, SYS_PTRACE
+        MOV RDI, PTRACE_GETREGS
+        MOV RSI, [child_pid]
+        MOV RDX, regs
+        SYSCALL
+        
+        MOV RAX, SYS_WRITE
+        MOV RDI, STDOUT
+        MOV RSI, regs
+        MOV RDX, 216
+        SYSCALL
+        
+        CMP regs._RAX 60
+        JE quit
+        JMP wait_loop
+        
+    quit:
+        MOV RAX, SYS_WRITE
+        MOV RDI, STDOUT
+        MOV RSI, exit_msg.msg
+        MOV RDX, exit_msg.len
+        SYSCALL
+        
+        MOV RAX, SYS_EXIT
+        XOR RDI, RDI
+        SYSCALL

@@ -66,7 +66,8 @@ app.post('/submit', async (req, res) => {
         await createProcessQuery(conn, data.name, data.path, data.args)
     }
 
-    if(data.name != null && data.path != null) {
+    if(data.name != null && data.path != null && execution == false) {
+        execution = true; //Locking execution
 
     }
     res.render('home', {data, errors: []});
