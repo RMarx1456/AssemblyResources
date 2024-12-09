@@ -21,7 +21,10 @@
 
 section .rodata
     exit_msg:
-        .msg db 'Quitting assembly program.'
+        .msg db 'Quitting assembly program.', 0xA
+        .len equ $- .msg
+    start_msg:
+        .msg db 'Running init', 0xA
         .len equ $- .msg
 section .data    
         
@@ -36,33 +39,35 @@ args resb 4096
 env resb 4096
 
 regs:
-        ._R15: resq 1
-        ._R14: resq 1
-        ._R13: resq 1   
-        ._R12: resq 1
-        ._RBP: resq 1
-        ._RBX: resq 1
-        ._R11: resq 1
-        ._R10: resq 1
-        ._R9: resq 1
-        ._R8: resq 1
-        ._RAX: resq 1
-        ._RCX: resq 1
-        ._RDX: resq 1
-        ._RSI: resq 1
-        ._RDI: resq 1
-        .orig_rax: resq 1
-        ._RIP: resq 1
-        ._CS: resq 1
-        ._EFLAGS: resq 1
-        ._RSP: resq 1
-        ._SS: resq 1
-        .fs_base: resq 1
-        .gs_base: resq 1
-        ._DS: resq 1
-        ._ES: resq 1
-        ._FS: resq 1
-        ._GS: resq 1
+        ._R15 resq 1
+        ._R14 resq 1
+        ._R13 resq 1   
+        ._R12 resq 1
+        ._RBP resq 1
+        ._RBX resq 1
+        ._R11 resq 1
+        ._R10 resq 1
+        ._R9 resq 1
+        ._R8 resq 1
+        ._RAX resq 1
+        ._RCX resq 1
+        ._RDX resq 1
+        ._RSI resq 1
+        ._RDI resq 1
+        .orig_rax resq 1
+        ._RIP resq 1
+        ._CS resq 1
+        ._EFLAGS resq 1
+        ._RSP resq 1
+        ._SS resq 1
+        .fs_base resq 1
+        .gs_base resq 1
+        ._DS resq 1
+        ._ES resq 1
+        ._FS resq 1
+        ._GS resq 1
+        .identifier resd 1
+        .len equ $- regs
 section .text
 global _start
 child:
@@ -80,6 +85,14 @@ child:
     SYSCALL
 
 _start:
+    MOV EAX, 'regs'
+    MOV [regs.identifier], EAX
+    
+    MOV RAX, SYS_WRITE
+    MOV RDI, STDOUT
+    MOV RSI, start_msg.msg
+    MOV RDX, start_msg.len
+    SYSCALL
     ;Read path from app.
     MOV RAX, SYS_READ
     MOV RDI, STDIN
@@ -128,7 +141,7 @@ _start:
         MOV RAX, SYS_WRITE
         MOV RDI, STDOUT
         MOV RSI, regs
-        MOV RDX, 216
+        MOV RDX, regs.len
         SYSCALL
         
         MOV RAX, regs._RAX
