@@ -83,13 +83,12 @@ async function CreateExecutable() {
         console.log('Linker Closed!');
     });
 }
-CreateExecutable();
 
 function setupChild(childProcess) {
     console.log('Debug flag!');
     childProcess.stdout.on('data', (data) => {
         console.log('Testing output');
-        console.log(data);
+        console.log(data.toString());
         regBuffer.push(data.toString());
     });
     childProcess.on('error', (err) => {
@@ -97,6 +96,7 @@ function setupChild(childProcess) {
     });
     childProcess.on('close', (code) => {
         console.log(code + " Close")
+
     });
 }
 
@@ -169,6 +169,7 @@ app.set('view engine', 'ejs');
 
 // Home page
 app.get('/', (req, res) => {
+    CreateExecutable();
     res.render('home', { errors: []});
 });
 app.post('/submit', async (req, res) => {
@@ -199,7 +200,7 @@ app.post('/submit', async (req, res) => {
         createProcess(conn, data.name, data.path, args)
 
         execution = false;
-        res.render('home', {data, errors: []});
+        res.render('home', { errors: []});
     }
     else {
 

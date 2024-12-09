@@ -24,6 +24,9 @@ section .rodata
     start_msg:
         .msg db 'Running init', 0xA
         .len equ $- .msg
+    input_read:
+        .msg db 'Read input', 0xA
+        .len equ $- .msg
 section .data    
         
         
@@ -80,6 +83,7 @@ child:
     MOV RSI, args
     MOV RDX, env
     SYSCALL
+    
 global _start
 _start:
     MOV EAX, 'regs'
@@ -96,24 +100,30 @@ _start:
     MOV RSI, path
     MOV RDX, 4096
     SYSCALL
+    MOV RAX, SYS_WRITE
+    MOV RDI, STDOUT
+    MOV RSI, path
+    MOV RDX, 128
+    SYSCALL
     ;Read args from app.
     MOV RAX, SYS_READ
     MOV RDI, STDIN
     MOV RSI, args
     MOV RDX, 4096
     SYSCALL
-    ;Read env from app.
-    MOV RAX, SYS_READ
-    MOV RDI, STDIN
-    MOV RSI, env
-    MOV RDX, 4096
+    MOV RAX, SYS_WRITE
+    MOV RDI, STDOUT
+    MOV RSI, args
+    MOV RDX, 128
     SYSCALL
+
     ;Create child process.
     MOV RAX, SYS_FORK
     SYSCALL
     
     CMP RAX, 0
     JE child
+    JB quit
     MOV [child_pid], RAX
     ;Wait for stops to gather syscall info.
     wait_loop:
