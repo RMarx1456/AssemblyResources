@@ -9,14 +9,12 @@
 %DEFINE SYS_FORK 57
 %DEFINE SYS_EXECVE 59
 %DEFINE SYS_EXIT 60
+%DEFINE SYS_WAIT4 61
 
 %DEFINE SYS_PTRACE 101
 %DEFINE PTRACE_TRACEME 0
 %DEFINE PTRACE_SYSCALL 0x7
 %DEFINE PTRACE_GETREGS 0xC
-
-%DEFINE SYS_WAIT4 61
-
 
 
 section .rodata
@@ -29,8 +27,8 @@ section .rodata
 section .data    
         
         
-        child_pid db 0
-        child_status db 0
+        child_pid dq 0
+        child_status dq 0
     
 section .bss
 ;Being lazy here; I need to get this project done.
@@ -69,7 +67,6 @@ regs:
         .identifier resd 1
         .len equ $- regs
 section .text
-global _start
 child:
     ;Allows the parent process to trace this child process.
     MOV RAX, SYS_PTRACE
@@ -83,7 +80,7 @@ child:
     MOV RSI, args
     MOV RDX, env
     SYSCALL
-
+global _start
 _start:
     MOV EAX, 'regs'
     MOV [regs.identifier], EAX

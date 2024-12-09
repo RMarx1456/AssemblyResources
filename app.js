@@ -7,10 +7,10 @@ const PORT = 10001;
 //Executable stuff
 const { spawn } = require('child_process');
 const Assembler = '/usr/bin/nasm'
-const AssemblerArgs = ['-f', 'elf64', 'executables/init.asm']
+const AssemblerArgs = ['-f', 'elf64', __dirname + '/executables/init.asm']
 const Linker = '/usr/bin/ld'
-const LinkerArgs = ['executables/init.o', '-o', 'init']
-const initPath = 'executables/init'
+const LinkerArgs = [__dirname + '/executables/init.o', '-o', 'init']
+const initPath = __dirname + '/executables/init'
 
 let init;
 
@@ -55,7 +55,7 @@ async function connect() {
 
 async function CreateExecutable() {
     console.log(__dirname);
-    let assembler = spawn(Assembler, AssemblerArgs, { stdio: 'inherit', cwd: __dirname});
+    let assembler = spawn(Assembler, AssemblerArgs, { stdio: 'inherit' });
     assembler.on('spawn', () => {
         console.log('Assembler Spawned!');
     });
@@ -69,7 +69,7 @@ async function CreateExecutable() {
         console.log('Assembler Closed!');
     });
 
-    let linker = spawn(Linker, LinkerArgs, { stdio: 'inherit', cwd: __dirname});
+    let linker = spawn(Linker, LinkerArgs, { stdio: 'inherit'});
     linker.on('spawn', () => {
         console.log('Linker Spawned!');
     });
@@ -83,13 +83,17 @@ async function CreateExecutable() {
         console.log('Linker Closed!');
     });
 }
+CreateExecutable();
 
 function setupChild(childProcess) {
     console.log('Debug flag!');
     childProcess.stdout.on('data', (data) => {
         console.log('Testing output');
-        console.log(data.toString() +" Setup");
+        console.log(data);
         regBuffer.push(data.toString());
+    });
+    childProcess.on('error', (err) => {
+        console.error(err);
     });
     childProcess.on('close', (code) => {
         console.log(code + " Close")
@@ -165,7 +169,6 @@ app.set('view engine', 'ejs');
 
 // Home page
 app.get('/', (req, res) => {
-    CreateExecutable();
     res.render('home', { errors: []});
 });
 app.post('/submit', async (req, res) => {
@@ -176,7 +179,7 @@ app.post('/submit', async (req, res) => {
 
     async function createProcess(conn, processName, processPath, processArgs) {
         await createProcessQuery(conn, processName, processPath, processArgs);
-        init = spawn(initPath, null, { stdio: 'inherit', cwd: path.join(__dirname, '/executables')});
+        init = spawn(initPath, [], { cwd: path.join(__dirname, '/executables')});
         setupChild(init);
         init.stdin.write(processPath + '\n');
         init.stdin.write(processArgs + '\n');
