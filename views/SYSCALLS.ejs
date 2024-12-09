@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles/style.css">
+    <title>Assembly Resources</title>
+</head>
+<body>
+    <h1>Syscall List</h1>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>RAX</th>
+            <th>RDI</th>
+            <th>RSI</th>
+            <th>RDX</th>
+            <th>R10</th>
+            <th>R8</th>
+            <th>R9</th>
+        </tr>
+        <% if (details.length > 0) { %>
+        <% for(let i = 0; i < details.length; i++) { %>
+            <tr>
+                <td><%= details[i].SYS_NAME %></td>
+                <td><%= details[i].RAX %></td>
+                <td><%= details[i].RDI %></td>
+                <td><%= details[i].RSI %></td>
+                <td><%= details[i].RDX %></td>
+                <td><%= details[i].R10 %></td>
+                <td><%= details[i].R8 %></td>
+                <td><%= details[i].R9 %></td>
+            </tr>
+        <% } %>
+        <% } else { %>
+            <p>No Syscalls</p>
+        <% } %>
+    </table>
+        
+</body>
+</html>

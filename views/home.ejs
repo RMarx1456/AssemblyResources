@@ -7,27 +7,18 @@
     <title>Assembly Resources</title>
 </head>
 <body>
-    <h1>Start a new process</h1>
-    <form action="/submit" method="POST">
-        <input class="textualInput" type="name" id="name" name="name" placeholder="Place a process name here.">
-        <input class="textualInput" type="text" id="path" name="path" placeholder="Place the path to the program">
-        <input class="textualInput" type="text" id="args" name="args" placeholder="Place arguments here">
+    <h1>Input System Call</h1>
+    <form method="POST" action="/confirm">
+        <input class="textualInput" name="SYS_NAME" id="name" name="name" placeholder="SYS_{NAME}">
+        <input class="textualInput" name="RAX" id="RAX" name="RAX" placeholder="RAX">
+        <input class="textualInput" name="RDI" id="RDI" name="RDI" placeholder="RDI">
+        <input class="textualInput" name="RSI" id="RSI" name="RSI" placeholder="RSI">
+        <input class="textualInput" name="RDX" id="RDX" name="RDX" placeholder="RDX">
+        <input class="textualInput" name="R10" id="R10" name="R10" placeholder="R10">
+        <input class="textualInput" name="R8" id="R8" name="R8" placeholder="R8">
+        <input class="textualInput" name="R9" id="R9" name="R9" placeholder="R9">
         <button action="submit">Submit</button>
     </form>
-    <!--Only queries processes created through here AND are in the database.-->
-    <h1>Query Process</h1>
-    <form action="/submit" method="POST">
-        <input class="textualInput" type="text" id="processName" name="processName" placeholder="Place the process name here">
-        <input class="radioInput" class="radioInput"type="radio" id="Syscalls" name="SyscallQuery" value="Syscall">
-        <label for="Syscalls">Query SYSCALLS</label>
-        <br>
-        <input class="radioInput" type="radio" id="Errors" name="ErrorQuery" value="Errors">
-        <label for="Errors">Query SYSCALL errors</label>
-        <br>
-        <input class="radioInput" type="radio" id="PInfo" name="PInfo" value="PInfo">
-        <label for="PInfo">Query process info</label>
-        <br>
-        <button action="submit">Submit</button>
-    </form>
+    <a href="/SYSCALLS">View all SYSCALLS</a>
 </body>
 </html>

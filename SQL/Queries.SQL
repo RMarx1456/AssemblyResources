@@ -1,0 +1,9 @@
+CREATE TABLE SYSCALL (  
+    RAX BIGINT PRIMARY KEY,     
+    SYS_NAME VARCHAR(255),     
+    RDI VARCHAR(255),     
+    RSI VARCHAR(255),     
+    RDX VARCHAR(255),     
+    R10 VARCHAR(255),     
+    R8 VARCHAR(255),     
+    R9 VARCHAR(255));
