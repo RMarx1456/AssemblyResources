@@ -8,6 +8,7 @@
 </head>
 <body>
     <h1>Input System Call</h1>
+    <img src="images/tux.png" id="tuxIMG">
     <form method="POST" action="/confirm">
         <input class="textualInput" name="SYS_NAME" id="name" name="name" placeholder="SYS_{NAME}">
         <input class="textualInput" name="RAX" id="RAX" name="RAX" placeholder="RAX">
@@ -17,8 +18,8 @@
         <input class="textualInput" name="R10" id="R10" name="R10" placeholder="R10">
         <input class="textualInput" name="R8" id="R8" name="R8" placeholder="R8">
         <input class="textualInput" name="R9" id="R9" name="R9" placeholder="R9">
-        <button action="submit">Submit</button>
+        <button action="submit" id="submitBTN">Submit</button>
     </form>
-    <a href="/SYSCALLS">View all SYSCALLS</a>
+    <a href="/SYSCALLS" id="syscallsLink">View all SYSCALLS</a>
 </body>
 </html>
