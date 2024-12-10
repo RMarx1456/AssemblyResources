@@ -8,3 +8,8 @@ The home endpoint allows you to input SYSCALLS into the MariaDB database.
 You can view a list of all the SYSCALLS through the /SYSCALLS endpoint.
 The confirm endpoint shows you what you input into the MariaDB database.
 
+Limitations:
+No input validation (yet).
+Only one feature implemented (system calls).
+
+
